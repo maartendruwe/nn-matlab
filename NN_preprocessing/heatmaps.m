@@ -129,6 +129,7 @@ for aa = 1:length(modeldirs)
             heatmap = heatmap + hm;
         end
         % save heatmap to .mat file in right folder
+        heatmap = single(heatmap);
         filepath = [hm_dir, '\', name_gen, '.mat'];
         save(filepath, 'heatmap');
         filepath = [hm_dir_center, '\', name_gen, '.mat'];
