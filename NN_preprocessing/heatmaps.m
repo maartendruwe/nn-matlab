@@ -20,7 +20,7 @@ sim_dir = 'G:\experiments\scene1';
 render = '\renders3';
 
 modeldirs = dir([sim_dir, render, '\m*']);
-for aa = 1:1 %1:length(modeldirs)
+for aa = 1:length(modeldirs)
     
     clear imfiles
     modelname = modeldirs(aa).name;
@@ -60,9 +60,10 @@ for aa = 1:1 %1:length(modeldirs)
     jointscales = {0.3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2}; %scaling for gaussians
     jointStart = 1; jointEnd = 4; jointEndMaps = 3;
 
-    for ii = 3400:3400% 1:length(imfiles) %1:length(imfiles)
+    for ii = 1:length(imfiles) %1:length(imfiles)
         updateText = ['file ', num2str(ii), ' out of ', ...
-            num2str(length(imfiles)), ' from ', modelname];
+            num2str(length(imfiles)), ' from ', modelname, ...
+            ' already the ', num2str(aa), 'th model'];
         updateText
         clear ann_pos; clear hs; 
         name_im = imfiles(ii).name; %name for image, depth and segmentation
