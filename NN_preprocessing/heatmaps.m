@@ -20,7 +20,7 @@ sim_dir = 'G:\experiments\scene1';
 render = '\renders3';
 
 modeldirs = dir([sim_dir, render, '\m*']);
-for aa = 1:length(modeldirs)
+for aa = 1:1 %1:length(modeldirs)
     
     clear imfiles
     modelname = modeldirs(aa).name;
@@ -57,10 +57,10 @@ for aa = 1:length(modeldirs)
 
     imfiles = dir([image_dir, '\*.jpg']); %get list of all images in directory
 
-    jointscales = {4, 1.5, 1, 1, 1.5, 1.5, 1.5, 1.5, 1.5}; %scaling for gaussians
+    jointscales = {0.3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2}; %scaling for gaussians
     jointStart = 1; jointEnd = 4; jointEndMaps = 3;
 
-    for ii = 1:length(imfiles) %1:length(imfiles)
+    for ii = 3400:3400% 1:length(imfiles) %1:length(imfiles)
         updateText = ['file ', num2str(ii), ' out of ', ...
             num2str(length(imfiles)), ' from ', modelname];
         updateText
@@ -100,15 +100,14 @@ for aa = 1:length(modeldirs)
            hs(kk) = pdist(headsize(:,:,kk)); 
         end
         for jj = jointStart:jointEndMaps
-            S{jj} = ceil(hs*jointscales{jj});
-            sigma{jj} = S{jj}/6;
+            sigma{jj} = hs*jointscales{jj};
         end
 
         % Channel for every pedestrian to compute Gaussians for center
         % positions. All pedestrians with center position out of image 
         % window are removed.
 
-        heatmap = zeros(jointEndMaps, H, W);
+        heatmap = zeros(H, W, jointEndMaps);
         for pp = 1:length(hs)
             hm = zeros(H,W, jointEndMaps);
             for zz = 1:jointEndMaps %annotate each joint map for pedestrian
@@ -116,18 +115,22 @@ for aa = 1:length(modeldirs)
                 ypos = ann_pos{zz}(pp,2)+1;
                 % Check if joint position is within image borders
                 if ~(xpos<1 || xpos>W || ypos<1 || ypos>H)
-                    hm(ypos, xpos, zz) = 1;
+                    hm(:,:,zz) = create_gaussian(W,H,[xpos,ypos],...
+                        sigma{zz}(pp));
                 end   
-                gf = fspecial('gaussian', S{zz}(pp), sigma{zz}(pp));
-                hm(:,:,zz) = imfilter(hm(:,:,zz), gf);
-                maximum = max(max(hm(:,:,zz)));
-                if maximum ~=0 %else everything is zero
-                  hm(:,:,zz) = hm(:,:,zz)/maximum; %scale gaussians
-                end
             end
-            hm = permute(hm, [3 1 2]);
             heatmap = heatmap + hm;
         end
+        
+        % Normalize heatmaps
+        maxima = max(max(heatmap));
+        for yy = 1:size(heatmap, 3)
+           heatmap(:,:,yy) = heatmap(:,:,yy)/maxima(yy);
+        end
+        
+        % Transform to right format (Torch tensor)
+        heatmap = permute(heatmap, [3 1 2]);
+        
         % save heatmap to .mat file in right folder
         heatmap = single(heatmap);
         filepath = [hm_dir, '\', name_gen, '.mat'];
