@@ -23,7 +23,7 @@ for aa = 1:20 % for 10 different models
     seg_dir = [parent_dir, '\seg'];
     annotations_dir = [parent_dir, '\annotations'];
   
-    segfiles = dir([seg_dir, '\ped001*.jpg']); %get list of all images 
+    segfiles = dir([seg_dir, '\ped003*.jpg']); %get list of all images 
     % in directory with 1 pedestrian
     
     

@@ -13,6 +13,7 @@
 %-------------------------------------------------------------------------
 %
 clear all;
+addpath('occlusion');
 tic;
 %
 
@@ -59,6 +60,8 @@ for aa = 1:length(modeldirs)
 
     jointscales = {0.3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2}; %scaling for gaussians
     jointStart = 1; jointEnd = 4; jointEndMaps = 3;
+    threshold = 0.5; %Threshold for occlusion
+    aspect_ratio = 0.4287;
 
     for ii = 1:length(imfiles) %1:length(imfiles)
         updateText = ['file ', num2str(ii), ' out of ', ...
@@ -84,9 +87,21 @@ for aa = 1:length(modeldirs)
     %            'Color', colorspec{jj});
         end
 
-        % Remove pedestrians with center outside of window
-        C = ann_pos{1}(:, 1:2);
+        C = ann_pos{1}(:, 1:3); %x,y and z coordinates
         Cx = C(:,1)+1; Cy = C(:,2)+1; %center coordinates, was zero-based
+        
+%         % Check which pedestrians are occluded and remove occluded ones
+%         % from labels
+%         occluded = returnOccluded(C, threshold, aspect_ratio);
+%         if size(occluded,2)>0 && size(occluded,1)>0
+%             for xx = 1:numberOfJoints
+%                ann_pos{xx}(occluded, :) = []; 
+%                Cx(occluded,:) = [];
+%                Cy(occluded,:) = [];
+%             end
+%         end
+        
+        % Remove pedestrians with center outside of window
         remove_list = (Cx<1 + Cx>W + Cy<1 + Cy>H)>0; 
         numberOfJoints = length(ann_pos);
         for xx = 1:numberOfJoints
