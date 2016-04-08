@@ -7,7 +7,7 @@ sim_dir = 'G:\experiments\scene1';
 render = '\renders1';
 modeldirs = dir([sim_dir, render, '\m*']);
 
-for aa = 1:10
+for aa = 11:40
     
    modelname = modeldirs(aa).name; 
    model = ['\', modelname];
