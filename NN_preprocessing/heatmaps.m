@@ -18,10 +18,10 @@ tic;
 %
 
 sim_dir = 'G:\experiments\scene1';
-render = '\renders3';
+render = '\renders1';
 
 modeldirs = dir([sim_dir, render, '\m*']);
-for aa = 1:length(modeldirs)
+for aa = 92:length(modeldirs)
     
     clear imfiles
     modelname = modeldirs(aa).name;
