@@ -12,31 +12,28 @@
 % lowerneck)
 %-------------------------------------------------------------------------
 %
-clear all;
+clear;
 addpath('occlusion');
 tic;
 %
 
-sim_dir = 'G:\experiments\scene1';
-render = '\renders1';
+sim_dir = 'C:/Users/MD/Documents/SIMULATION/experiments/scene1/render4';
+modeldirs = dir([sim_dir, '/image', '/m*']);
 
-modeldirs = dir([sim_dir, render, '\m*']);
-for aa = 92:length(modeldirs)
+for aa = 1:length(modeldirs)
     
     clear imfiles
     modelname = modeldirs(aa).name;
+    model = ['/', modelname];
     
-    
-    model = ['\', modelname];
-    parent_dir = [sim_dir, render, model];
-    image_dir = [parent_dir, '\image'];
-    annotations_dir = [parent_dir, '\annotations'];
-    seg_dir = [parent_dir, '\seg'];
-    depth_dir = [parent_dir, '\depth'];
-    hm_dir = [parent_dir, '\heatmaps'];
-    hm_dir_center = [parent_dir, '\heatmapscenter'];
-    mkdir(parent_dir, 'heatmaps');
-    mkdir(parent_dir, 'heatmapscenter');
+    image_dir = [sim_dir, '/image', model];
+    annotations_dir = [sim_dir, '/annotations'];
+    seg_dir = [sim_dir, '/seg_occ', model];
+    depth_dir = [sim_dir, '/depth', model];
+    hm_dir = [sim_dir, '/heatmaps', model];
+    hm_dir_center = [sim_dir, '/heatmapscenter', model];
+    mkdir(hm_dir);
+    mkdir(hm_dir_center);
 
 
     % annotations.feet = 'feet';
@@ -56,7 +53,7 @@ for aa = 92:length(modeldirs)
       [0.5 0.9 0.2]; [0.1 0.5 0.9]; [0.8 0.0 0.8]; ...
       [0.9 0.5 0.1]; [0.15 0.55 0.22]};
 
-    imfiles = dir([image_dir, '\*.jpg']); %get list of all images in directory
+    imfiles = dir([image_dir, '/p*.jpg']); %get list of all images in directory
 
     jointscales = {0.3, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2}; %scaling for gaussians
     jointStart = 1; jointEnd = 4; jointEndMaps = 3;
@@ -73,14 +70,15 @@ for aa = 92:length(modeldirs)
         name_gen = name_im(1:end-4); %name without format
         name_ann = [name_gen, '.txt']; %name for annotations
 
-        im = imread([image_dir, '\', name_im]);
+        im = imread([image_dir, '/', name_im]);
         [H,W,~] = size(im);
     %     figure(); imshow(im, []);
     %     hold on;
 
         for jj = jointStart:jointEnd %3 corresponds to feet, center, head and upperneck
            joint = annotation_joints{jj};
-           joint_path = [annotations_dir, '\', joint, '\', name_ann];
+           joint_path = [annotations_dir, '/', joint, '/', ...
+               model, '/', name_ann];
            pos = load(joint_path);
            ann_pos{jj} = pos;
     %        plot(pos(:,1),pos(:,2),'r.', 'MarkerSize', 20, ...
@@ -90,16 +88,22 @@ for aa = 92:length(modeldirs)
         C = ann_pos{1}(:, 1:3); %x,y and z coordinates
         Cx = C(:,1)+1; Cy = C(:,2)+1; %center coordinates, was zero-based
         
-%         % Check which pedestrians are occluded and remove occluded ones
-%         % from labels
-%         occluded = returnOccluded(C, threshold, aspect_ratio);
-%         if size(occluded,2)>0 && size(occluded,1)>0
-%             for xx = 1:numberOfJoints
-%                ann_pos{xx}(occluded, :) = []; 
-%                Cx(occluded,:) = [];
-%                Cy(occluded,:) = [];
-%             end
-%         end
+        % Check which pedestrians are occluded and remove occluded ones
+        % from labels
+        for ff = 1:size(C,1)
+           filepath_seg = [seg_dir, '/', name_gen, '_', num2str(ff), '.jpg'];
+           segs{ff} = imread(filepath_seg);
+        end
+        
+        occluded = returnOccluded(C, threshold, segs);
+        numberOfJoints = length(ann_pos);
+        if size(occluded,2)>0 && size(occluded,1)>0
+            Cx(occluded,:) = [];
+            Cy(occluded,:) = [];
+            for xx = 1:numberOfJoints
+              ann_pos{xx}(occluded, :) = [];   
+            end
+        end
         
         % Remove pedestrians with center outside of window
         remove_list = (Cx<1 + Cx>W + Cy<1 + Cy>H)>0; 
@@ -149,9 +153,9 @@ for aa = 92:length(modeldirs)
         
         % save heatmap to .mat file in right folder
         heatmap = single(heatmap);
-        filepath = [hm_dir, '\', name_gen, '.mat'];
+        filepath = [hm_dir, '/', name_gen, '.mat'];
         save(filepath, 'heatmap');
-        filepath = [hm_dir_center, '\', name_gen, '.mat'];
+        filepath = [hm_dir_center, '/', name_gen, '.mat'];
         heatmap = heatmap(1,:,:);
         save(filepath, 'heatmap'); 
     end
