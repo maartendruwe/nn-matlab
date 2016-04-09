@@ -18,15 +18,15 @@ for jj = 1:np
 end
 
 for jj=1:np-1
-   clear overlaparea;
+   
    for zz=jj+1:np
       sums = seg_bw(:,:,jj) + seg_bw(:,:,zz);
       overlaparea(zz-jj) = length(find(sums==2));
    end
-   area = squeeze(sum(sum(seg_bw(:,:,jj+1:end), 1),2));
-   overlap = overlaparea./area';
+   area = squeeze(sum(sum(seg_bw, 1),2));
+   overlap = overlaparea./area;
    occ = overlap > threshold;
-   tmp = cat(1, zeros(jj,1), occ');
+   tmp = cat(1, zeros(jj,1), occ);
    tmp = logical(tmp);
    occ = ind(tmp);
    if size(occ,2)>0
