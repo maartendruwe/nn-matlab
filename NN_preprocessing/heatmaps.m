@@ -145,7 +145,9 @@ for aa = 1:length(modeldirs)
         % Normalize heatmaps
         maxima = max(max(heatmap));
         for yy = 1:size(heatmap, 3)
-           heatmap(:,:,yy) = heatmap(:,:,yy)/maxima(yy);
+            if maxima(yy) ~= 0
+                heatmap(:,:,yy) = heatmap(:,:,yy)/maxima(yy);
+            end
         end
         
         % Transform to right format (Torch tensor)
